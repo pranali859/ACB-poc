@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:servicenow="http://www.mulesoft.org/schema/mule/servicenow" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/servicenow http://www.mulesoft.org/schema/mule/servicenow/current/mule-servicenow.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="731c7e7d-a244-47f8-aa6b-870e29c49b98" >
+		<salesforce:basic-connection username="esb_servicemax@bd.com.qa" password="Pa$$w0rd" securityToken="S54KNBWv2YbKCZe5L56nhLBv" url="https://test.salesforce.com/services/Soap/u/51.0" />
+	</salesforce:sfdc-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="10842425-633b-47c8-b4cf-9af167ee726f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sfdc-pocFlow" doc:id="6508fc0d-56fd-4c2a-bd33-6f34154aede1" >
+		<http:listener doc:name="Listener" doc:id="1d235140-d840-453f-a42f-d06f55beebfc" config-ref="HTTP_Listener_config" path="/api/service"/>
+		<set-variable value="01306996" doc:name="Set Variable" doc:id="c96b3f1b-331f-4bcb-930f-3a9538bfb607" variableName="refNumber"/>
+		<salesforce:query doc:name="Query" doc:id="15c7655a-72af-4612-b006-db84832e483e" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Object_Unique_ID__c FROM Case WHERE CaseNumber=':refNumber']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	refNumber : vars.refNumber
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" doc:name="Set Payload" doc:id="0b927661-b063-405b-9a90-eebc333c59c2" />
+		<logger level="INFO" doc:name="Logger" doc:id="0e142562-613a-4a07-a866-0d9600ae0b80" message="#[payload]"/>
+	</flow>
+</mule>
